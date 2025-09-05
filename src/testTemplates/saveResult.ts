@@ -19,7 +19,8 @@ import { reportResults } from '../services/result';
  */
 export const saveResults = async (
   processTestTemplate: TransactionTestTemplate,
-  results: TestFlowOutput[]
+  results: TestFlowOutput[],
+  options?: { target?: 'ui' | 'db' }
 ) => {
   const testResults = results.map((flowOutput: TestFlowOutput) => {
     const action: string = flowOutput.testStepDescription.action;
@@ -56,5 +57,5 @@ export const saveResults = async (
 
   const orgContext = await getOrgContext(processTestTemplate.connection);
 
-  await reportResults(testResults, orgContext);
+  await reportResults(testResults, orgContext, options);
 };

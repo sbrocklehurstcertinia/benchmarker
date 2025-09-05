@@ -16,7 +16,8 @@ import { convertTestResultOutputToTestInfo } from './result/infoTable';
 
 export async function reportResults(
   testResultOutput: TestResultOutput[],
-  orgContext: OrgContext
+  orgContext: OrgContext,
+  options?: { target?: 'ui' | 'db' }
 ): Promise<void> {
   const results = testResultOutput.map(convertOutputToTestResult);
 
@@ -38,7 +39,7 @@ export async function reportResults(
       const validAlerts = await generateValidAlerts(testResultOutput);
       const testInfoResults =
         await convertTestResultOutputToTestInfo(testResultOutput);
-      await save(results, orgContext, validAlerts, testInfoResults);
+      await save(results, orgContext, validAlerts, testInfoResults, options);
     } catch (err) {
       console.error(
         'Failed to save results to database. Check DATABASE_URL environment variable, unset to skip saving.'

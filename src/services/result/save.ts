@@ -5,10 +5,11 @@
 
 //import { Alert } from '../../database/entity/alert';
 import { TestInfo } from '../../database/entity/testInfo';
+import { UiTestResult } from '../../database/entity/uiTestResult';
+import { UiTestInfo } from '../../database/entity/uiTestInfo';
 import { ExecutionInfo } from '../../database/entity/execution';
 import { OrgInfo } from '../../database/entity/org';
 import { PackageInfo } from '../../database/entity/package';
-//import { TestResult } from '../../database/entity/result';
 import { saveExecutionInfo } from '../../database/executionInfo';
 import { getOrgInfoById, saveOrgInfo } from '../../database/orgInfo';
 import { saveAlerts } from '../../database/alertInfo';
@@ -18,6 +19,8 @@ import {
 } from '../../database/packageInfo';
 import { saveTestResult } from '../../database/testResult';
 import { saveTestInfoRecords } from '../../database/testInfo';
+import { saveUiTestResult } from '../../database/uiTestResult';
+import { saveUiTestInfoRecords } from '../../database/uiTestInfo';
 import { getExternalBuildId } from '../../shared/env';
 import { Org, OrgContext } from '../org/context';
 import { Package } from '../org/packages';
@@ -28,15 +31,44 @@ export async function save(
   testResults: ITestResult[],
   orgContext: OrgContext,
   alerts: ITestAlert[],
-  testInfoResults: TestInfo[]
+  testInfoResults: TestInfo[],
+  options?: { target?: 'ui' | 'db' }
 ): Promise<void> {
-  const testResultsDB: ITestResult[] = await saveTestResults(testResults);
+  const target = options?.target || 'db';
+
+  let savedResults: ITestResult[];
+
+  if (target === 'ui') {
+    // Map to UiTestResult instances and save
+    const uiRows: UiTestResult[] = testResults.map(r =>
+      Object.assign(new UiTestResult(), r)
+    );
+    savedResults = (await saveUiTestResult(uiRows)) as unknown as ITestResult[];
+  } else {
+    savedResults = await saveTestResult(testResults);
+  }
+
   const orgInfoDB: OrgInfo = await saveOrg(orgContext.orgInfo);
   const packagesDB: PackageInfo[] = await savePackages(orgContext.packagesInfo);
-  await saveAlert(alerts, testResultsDB);
-  await saveTestInfoRecords(testInfoResults);
+
+  await saveAlert(alerts, savedResults);
+
+  if (target === 'ui') {
+    const uiInfoRows: UiTestInfo[] = testInfoResults.map(ti => {
+      const ui = new UiTestInfo();
+      ui.action = ti.action;
+      ui.flowName = ti.flowName;
+      ui.product = ti.product;
+      ui.additionalData = ti.additionalData;
+      return ui;
+    });
+    await saveUiTestInfoRecords(uiInfoRows);
+  } else {
+    await saveTestInfoRecords(testInfoResults);
+  }
+
   const executionInfoRows = generateExecutionInfoRows(
-    testResultsDB.map(tr => tr.id),
+    savedResults.map(tr => tr.id),
     orgInfoDB.id,
     packagesDB.map(pkg => pkg.id)
   );
@@ -80,10 +112,6 @@ function createExecutionInfo(
   executionInfo.externalBuildId = buildId;
 
   return executionInfo;
-}
-
-async function saveTestResults(results: ITestResult[]): Promise<ITestResult[]> {
-  return saveTestResult(results);
 }
 
 async function saveAlert(

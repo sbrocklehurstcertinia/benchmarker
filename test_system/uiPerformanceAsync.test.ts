@@ -8,10 +8,10 @@ import {
   createApexExecutionTestStepFlow,
   saveResults,
 } from '../src';
-import { loadTestResults } from '../src/database/testResult';
+import { loadUiTestResults } from '../src/database/uiTestResult';
 import { cleanDatabase } from './database';
 
-describe('System Test Process', () => {
+describe('System Test Process UI', () => {
   let test: TransactionTestTemplate;
 
   before(async function () {
@@ -19,8 +19,8 @@ describe('System Test Process', () => {
     test = await TransactionProcess.build('MockProduct');
   });
 
-  describe('Flow', function () {
-    it('should execute successfully', async () => {
+  describe('Flow UI', function () {
+    it('should execute successfully UI', async () => {
       await TransactionProcess.executeTestStep(
         test,
         await createApexExecutionTestStepFlow(
@@ -30,9 +30,9 @@ describe('System Test Process', () => {
         )
       );
 
-      await saveResults(test, test.flowStepsResults);
+      await saveResults(test, test.flowStepsResults, { target: 'ui' });
 
-      const results = await loadTestResults();
+      const results = await loadUiTestResults();
       expect(results.length).to.be.equal(1);
       const result = results[0];
       expect(result.cpuTime).to.be.above(0);
