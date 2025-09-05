@@ -1,9 +1,8 @@
 /** @ignore */
 /* UI test info DB helper */
 import { UiTestInfo } from './entity/uiTestInfo';
-import { getConnection } from './connection';
+import { saveRecords } from './saveRecords';
 
 export async function saveUiTestInfoRecords(testStepResults: UiTestInfo[]) {
-  const connection = await getConnection();
-  return connection.manager.save(testStepResults);
+  return saveRecords<UiTestInfo>(testStepResults);
 }

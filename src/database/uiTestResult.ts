@@ -1,11 +1,11 @@
 /** @ignore */
 /* UI test result DB helpers */
 import { UiTestResult } from './entity/uiTestResult';
+import { saveRecords } from './saveRecords';
 import { getConnection } from './connection';
 
 export async function saveUiTestResult(testStepResults: UiTestResult[]) {
-  const connection = await getConnection();
-  return connection.manager.save(testStepResults);
+  return saveRecords<UiTestResult>(testStepResults);
 }
 
 export async function loadUiTestResults(): Promise<UiTestResult[]> {
