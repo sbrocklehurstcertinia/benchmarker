@@ -8,9 +8,10 @@ import {
   DEFAULT_NUMERIC_VALUE,
   DEFAULT_STRING_VALUE,
 } from '../../shared/constants';
+import { ITestResult } from './ITestResult';
 
 @Entity({ name: 'test_result' })
-export class TestResult extends PerformanceBaseEntity {
+export class TestResult extends PerformanceBaseEntity implements ITestResult {
   [key: string]: number | string | Date | boolean | undefined;
 
   @Column('integer', { nullable: true })

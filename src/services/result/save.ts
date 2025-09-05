@@ -3,12 +3,12 @@
  * Copyright (c) 2024 Certinia Inc. All rights reserved.
  */
 
-import { Alert } from '../../database/entity/alert';
+//import { Alert } from '../../database/entity/alert';
 import { TestInfo } from '../../database/entity/testInfo';
 import { ExecutionInfo } from '../../database/entity/execution';
 import { OrgInfo } from '../../database/entity/org';
 import { PackageInfo } from '../../database/entity/package';
-import { TestResult } from '../../database/entity/result';
+//import { TestResult } from '../../database/entity/result';
 import { saveExecutionInfo } from '../../database/executionInfo';
 import { getOrgInfoById, saveOrgInfo } from '../../database/orgInfo';
 import { saveAlerts } from '../../database/alertInfo';
@@ -21,14 +21,16 @@ import { saveTestInfoRecords } from '../../database/testInfo';
 import { getExternalBuildId } from '../../shared/env';
 import { Org, OrgContext } from '../org/context';
 import { Package } from '../org/packages';
+import { ITestResult } from '../../database/entity/ITestResult';
+import { ITestAlert } from '../../database/entity/ITestAlert';
 
 export async function save(
-  testResults: TestResult[],
+  testResults: ITestResult[],
   orgContext: OrgContext,
-  alerts: Alert[],
+  alerts: ITestAlert[],
   testInfoResults: TestInfo[]
 ): Promise<void> {
-  const testResultsDB: TestResult[] = await saveTestResults(testResults);
+  const testResultsDB: ITestResult[] = await saveTestResults(testResults);
   const orgInfoDB: OrgInfo = await saveOrg(orgContext.orgInfo);
   const packagesDB: PackageInfo[] = await savePackages(orgContext.packagesInfo);
   await saveAlert(alerts, testResultsDB);
@@ -80,14 +82,14 @@ function createExecutionInfo(
   return executionInfo;
 }
 
-async function saveTestResults(results: TestResult[]): Promise<TestResult[]> {
+async function saveTestResults(results: ITestResult[]): Promise<ITestResult[]> {
   return saveTestResult(results);
 }
 
 async function saveAlert(
-  alerts: Alert[],
-  testResultsDB: TestResult[]
-): Promise<Alert[]> {
+  alerts: ITestAlert[],
+  testResultsDB: ITestResult[]
+): Promise<ITestAlert[]> {
   alerts.forEach(alert => {
     const match = testResultsDB.find(
       result =>
