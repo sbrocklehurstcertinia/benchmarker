@@ -23,11 +23,7 @@
       {
         "transform": "./scripts/apexLoader.ts"
       }
-    ],
+    ]
   },
-  "include": [
-    "src",
-    "test",
-    "test_system"
-  ]
+  "include": ["src", "test", "test_system", "autotests/ui/performance/**/*.ts"]
 }
