@@ -29,7 +29,12 @@
     "test": "nyc mocha --timeout 10000 'test/**/*.test.*'",
     "test:only": "nyc mocha --timeout 10000",
     "test:system:init": "cp test_system/.env .env",
-    "test:system": "mocha --timeout 30000 'test_system/**/*.test.*'"
+    "test:system": "mocha --timeout 30000 'test_system/**/*.test.*'",
+    "test:ui": "artillery run",
+    "test:ui:all": "sh bin/scripts/shell/run-performance-ui-tests.sh",
+    "test:ui:dev": "DEBUG=true artillery run -s",
+    "test:ui:generate:login": "node autotests/ui/scripts/generate-login-url.js",
+    "test:performance:setup": "node force-app/test/performance/scripts/generate-sfdx-project-performance.js sfdx-project.json && echo 'Now push to your org'"
   },
   "dependencies": {
     "@jsforce/jsforce-node": "3.2.0",
@@ -47,6 +52,9 @@
     "typeorm": "0.3.20"
   },
   "devDependencies": {
+    "@types/artillery": "^1.7.4",
+    "artillery": "^2.0.23",
+    "@playwright/test": "^1.55.0",
     "@types/chai": "4.3.16",
     "@types/chai-as-promised": "7.1.8",
     "@types/cli-table": "0.3.4",

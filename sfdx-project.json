@@ -1,0 +1,68 @@
+{
+	"packageDirectories": [
+		{
+			"path": "force-app/core/deps",
+			"default": false
+		},
+		{
+			"path": "node_modules/@ffdev/psenterprise-lib/force-app",
+			"default": false
+		},
+		{
+			"path": "node_modules/@ffdev/psenterprise-lib/force-app-tools",
+			"default": false
+		},
+		{
+			"path": "force-app/core/sobjects",
+			"default": false
+		},
+		{
+			"path": "node_modules/@ffdev/pscloud-lib/force-app",
+			"default": false
+		},
+		{
+			"path": "force-app/core/main",
+			"default": false
+		},
+		{
+			"path": "force-app/core/test",
+			"default": false
+		},
+		{
+			"path": "force-app/core/tools",
+			"default": false
+		},
+		{
+			"path": "force-app/feature",
+			"default": false
+		},
+		{
+			"path": "force-app/revenue",
+			"default": false
+		},
+		{
+			"path": "force-app/deploy-last",
+			"default": false
+		},
+		{
+			"path": "force-app/test/performance",
+			"default": true
+		}
+	],
+	"namespace": "pse",
+	"sfdcLoginUrl": "https://login.salesforce.com",
+	"sourceApiVersion": "64.0",
+	"plugins": {
+		"dependencies": [
+			{
+				"namespace": "appirio_core"
+			},
+			{
+				"namespace": "fferpcore"
+			}
+		],
+		"unpackagedMetadata": [
+			"autotests/ai"
+		]
+	}
+}
