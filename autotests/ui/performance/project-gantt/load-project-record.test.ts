@@ -52,9 +52,10 @@ async function simpleTest(
   events: EventEmitter,
   test: ArtilleryTest
 ) {
-  const results: Record<string, number> = {};
+  const results: Record<string, any> = {};
+  const overallStart = Date.now();
 
-  // Login step
+  // Login step (Salesforce authentication)
   await test.step('login_test', async () => {
     const start = Date.now();
     await stepErrorCapture('login_test', CURRENT_TEST_FILE_NAME, async () => {
@@ -62,10 +63,18 @@ async function simpleTest(
       await gotoSF(page, events, async () => await logIn(page));
       console.log('Login completed');
     });
-    results.login_test = Date.now() - start;
+    const salesforceLoadTime = Date.now() - start;
+    results.login_test = {
+      duration: salesforceLoadTime,
+      salesforceLoadTime,
+      componentLoadTime: 0,
+      overallLoadTime: Date.now() - overallStart,
+      testSuiteName: 'Project Record Load Test Suite',
+      individualTestName: 'Salesforce Login Test',
+    };
   });
 
-  // Navigation step
+  // Navigation step (Component loading)
   await test.step('simple_navigation', async () => {
     const start = Date.now();
     await stepErrorCapture(
@@ -95,16 +104,32 @@ async function simpleTest(
         });
       }
     );
-    results.simple_navigation = Date.now() - start;
+    const componentLoadTime = Date.now() - start;
+    results.simple_navigation = {
+      duration: componentLoadTime,
+      salesforceLoadTime: 0,
+      componentLoadTime,
+      overallLoadTime: Date.now() - overallStart,
+      testSuiteName: 'Project Record Load Test Suite',
+      individualTestName: 'Lightning Navigation Test',
+    };
   });
+
+  const totalOverallLoadTime = Date.now() - overallStart;
 
   // Write results to JSON file
   const performanceData = {
     aggregate: {
       summaries: Object.fromEntries(
-        Object.entries(results).map(([stepName, duration]) => [
+        Object.entries(results).map(([stepName, data]) => [
           `browser.step.${stepName}`,
-          { min: duration, max: duration, mean: duration, count: 1 },
+          {
+            salesforceLoadTime: data.salesforceLoadTime,
+            componentLoadTime: data.componentLoadTime,
+            overallLoadTime: totalOverallLoadTime,
+            testSuiteName: data.testSuiteName,
+            individualTestName: data.individualTestName,
+          },
         ])
       ),
     },

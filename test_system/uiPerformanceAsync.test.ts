@@ -99,16 +99,16 @@ describe('System Test UI Performance', () => {
           const metrics = summaries[stepKey];
 
           const result = new UiTestResult();
-          result.action = stepName;
-          result.flowName = 'Project Record Load Test';
-          result.product = 'MockProduct';
-          result.duration = Math.round(metrics.mean || 0);
-          result.min = Math.round(metrics.min || 0);
-          result.max = Math.round(metrics.max || 0);
-          result.count = metrics.count || 1;
-          result.p50 = Math.round(metrics.mean || 0);
-          result.p95 = Math.round((metrics.max || metrics.mean || 0) * 1.1);
-          result.p99 = Math.round((metrics.max || metrics.mean || 0) * 1.2);
+
+          // Set the new fields
+          result.testSuiteName =
+            metrics.testSuiteName || 'Project Record Load Test Suite';
+          result.individualTestName = metrics.individualTestName || stepName;
+          result.componentLoadTime = Math.round(metrics.componentLoadTime || 0);
+          result.salesforceLoadTime = Math.round(
+            metrics.salesforceLoadTime || 0
+          );
+          result.overallLoadTime = Math.round(metrics.overallLoadTime || 0);
 
           uiTestResults.push(result);
         }
@@ -128,24 +128,38 @@ describe('System Test UI Performance', () => {
       expect(uiTestResults.length).to.be.greaterThan(0);
       expect(savedResults.length).to.be.greaterThan(0);
 
-      const loginResult = uiTestResults.find(r => r.action === 'login_test');
+      const loginResult = uiTestResults.find(
+        r => r.individualTestName === 'Salesforce Login Test'
+      );
       const navigationResult = uiTestResults.find(
-        r => r.action === 'simple_navigation'
+        r => r.individualTestName === 'Lightning Navigation Test'
       );
 
       expect(loginResult).to.exist;
       expect(navigationResult).to.exist;
 
       if (loginResult) {
-        expect(loginResult.duration).to.be.greaterThan(0);
-        expect(loginResult.flowName).to.equal('Project Record Load Test');
-        expect(loginResult.product).to.equal('MockProduct');
+        expect(loginResult.testSuiteName).to.equal(
+          'Project Record Load Test Suite'
+        );
+        expect(loginResult.individualTestName).to.equal(
+          'Salesforce Login Test'
+        );
+        expect(loginResult.salesforceLoadTime).to.be.greaterThan(0);
+        expect(loginResult.componentLoadTime).to.equal(0);
+        expect(loginResult.overallLoadTime).to.be.greaterThan(0);
       }
 
       if (navigationResult) {
-        expect(navigationResult.duration).to.be.greaterThan(0);
-        expect(navigationResult.flowName).to.equal('Project Record Load Test');
-        expect(navigationResult.product).to.equal('MockProduct');
+        expect(navigationResult.testSuiteName).to.equal(
+          'Project Record Load Test Suite'
+        );
+        expect(navigationResult.individualTestName).to.equal(
+          'Lightning Navigation Test'
+        );
+        expect(navigationResult.componentLoadTime).to.be.greaterThan(0);
+        expect(navigationResult.salesforceLoadTime).to.equal(0);
+        expect(navigationResult.overallLoadTime).to.be.greaterThan(0);
       }
 
       console.log('UI performance test completed successfully');

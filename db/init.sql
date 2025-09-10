@@ -96,27 +96,11 @@ CREATE TABLE IF NOT EXISTS performance.ui_test_result (
     id serial PRIMARY KEY,
     create_date_time timestamp without time zone DEFAULT now() NOT NULL,
     update_date_time timestamp without time zone DEFAULT now() NOT NULL,
-    duration integer,
-    action text,
-    flow_name text,
-    error text,
-    target_value integer,
-    product text,
-    incognito_browser boolean,
-    speed_index integer,
-    time_to_interactive integer,
-    dlp_lines integer,
-    dp_documents integer,
-    test_type text,
-    cpu_time integer,
-    dml_rows integer,
-    dml_statements integer,
-    heap_size integer,
-    query_rows integer,
-    soql_queries integer,
-    queueable_jobs integer,
-    future_calls integer,
-    source_ref text
+    test_suite_name text,
+    individual_test_name text,
+    component_load_time integer,
+    salesforce_load_time integer,
+    overall_load_time integer
 );
 
 
