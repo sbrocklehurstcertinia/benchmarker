@@ -109,30 +109,20 @@ async function simpleTest(
 
         // Wait for the contacts list to load
         await page.waitForSelector(
-          'table[role="grid"], .slds-table, .listViewTable',
+          'table[role="grid"] tbody tr:first-child, .slds-table tbody tr:first-child, .listViewTable tbody tr:first-child, tbody tr:first-child',
           { timeout: 15000 }
         );
 
-        // Find and click the first contact record link - look for "Sam Watts" specifically or first contact
-        let firstContactLink = await page.$('a[title="Sam Watts"]');
-        if (!firstContactLink) {
-          // If Sam Watts not found, look for any contact link in the first row
-          firstContactLink = await page.$(
-            'table[role="grid"] tbody tr:first-child th a, .slds-table tbody tr:first-child th a, .listViewTable tbody tr:first-child th a'
-          );
-        }
-        if (!firstContactLink) {
-          // Try alternative selectors for contact links
-          firstContactLink = await page.$(
-            'table tbody tr:first-child td:first-child a, tbody tr:first-child th scope a'
-          );
-        }
+        // Always click the first contact entry (no name checks)
+        const firstContactLink = await page.$(
+          'table[role="grid"] tbody tr:first-child a, .slds-table tbody tr:first-child a, .listViewTable tbody tr:first-child a, tbody tr:first-child a'
+        );
 
         if (firstContactLink) {
           await firstContactLink.click();
           // Wait for the contact record page to load
           await page.waitForSelector(
-            '.record-header, .slds-page-header, .forceDetailPanelDesktop',
+            '.record-header, .slds-page-header, .forceDetailPanelDesktop, [data-record-page-component] ',
             { timeout: 15000 }
           );
         } else {
