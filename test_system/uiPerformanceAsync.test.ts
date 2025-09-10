@@ -19,10 +19,10 @@ describe('System Test UI Performance', () => {
   });
 
   describe('Artillery UI Performance', function () {
-    it('should execute real project record load test and save results to database', async function () {
+    it('should execute contact record load test and save result to database', async function () {
       this.timeout(120000);
 
-      console.log('Starting real Artillery UI performance test...');
+      console.log('Starting contact record Artillery UI performance test...');
 
       const testPath = path.join(
         __dirname,
@@ -93,76 +93,72 @@ describe('System Test UI Performance', () => {
 
       console.log('Available step metrics:', Object.keys(summaries));
 
-      for (const stepKey of Object.keys(summaries)) {
-        if (stepKey.startsWith('browser.step.')) {
-          const stepName = stepKey.replace('browser.step.', '');
-          const metrics = summaries[stepKey];
+      // Process the single contact performance test result
+      const contactTestKey = 'browser.step.contact_performance_test';
+      if (summaries[contactTestKey]) {
+        const metrics = summaries[contactTestKey];
 
-          const result = new UiTestResult();
+        const result = new UiTestResult();
 
-          // Set the new fields
-          result.testSuiteName =
-            metrics.testSuiteName || 'Project Record Load Test Suite';
-          result.individualTestName = metrics.individualTestName || stepName;
-          result.componentLoadTime = Math.round(metrics.componentLoadTime || 0);
-          result.salesforceLoadTime = Math.round(
-            metrics.salesforceLoadTime || 0
-          );
-          result.overallLoadTime = Math.round(metrics.overallLoadTime || 0);
+        // Set the new fields
+        result.testSuiteName =
+          metrics.testSuiteName || 'Contact Record Load Test Suite';
+        result.individualTestName =
+          metrics.individualTestName || 'Contact Record Performance Test';
+        result.componentLoadTime = Math.round(metrics.componentLoadTime || 0);
+        result.salesforceLoadTime = Math.round(metrics.salesforceLoadTime || 0);
+        result.overallLoadTime = Math.round(metrics.overallLoadTime || 0);
 
-          uiTestResults.push(result);
-        }
+        uiTestResults.push(result);
+      } else {
+        throw new Error(
+          'Expected contact performance test result not found in Artillery output'
+        );
       }
 
       // Save and verify
       console.log(
-        `Saving ${uiTestResults.length} UI test results to database...`
+        `Saving ${uiTestResults.length} UI test result to database...`
       );
       await saveUiTestResult(uiTestResults);
-      console.log('All UI test results saved successfully');
+      console.log('UI test result saved successfully');
 
       const savedResults = await loadUiTestResults();
       console.log(`Total UI test results in database: ${savedResults.length}`);
 
       // Basic assertions
-      expect(uiTestResults.length).to.be.greaterThan(0);
+      expect(uiTestResults.length).to.equal(1); // Should be exactly 1 record
       expect(savedResults.length).to.be.greaterThan(0);
 
-      const loginResult = uiTestResults.find(
-        r => r.individualTestName === 'Salesforce Login Test'
-      );
-      const navigationResult = uiTestResults.find(
-        r => r.individualTestName === 'Lightning Navigation Test'
+      const contactResult = uiTestResults.find(
+        r => r.individualTestName === 'Contact Record Performance Test'
       );
 
-      expect(loginResult).to.exist;
-      expect(navigationResult).to.exist;
+      expect(contactResult).to.exist;
 
-      if (loginResult) {
-        expect(loginResult.testSuiteName).to.equal(
-          'Project Record Load Test Suite'
+      if (contactResult) {
+        expect(contactResult.testSuiteName).to.equal(
+          'Contact Record Load Test Suite'
         );
-        expect(loginResult.individualTestName).to.equal(
-          'Salesforce Login Test'
+        expect(contactResult.individualTestName).to.equal(
+          'Contact Record Performance Test'
         );
-        expect(loginResult.salesforceLoadTime).to.be.greaterThan(0);
-        expect(loginResult.componentLoadTime).to.equal(0);
-        expect(loginResult.overallLoadTime).to.be.greaterThan(0);
+        // salesforceLoadTime should be > 0 as it includes login + org access
+        expect(contactResult.salesforceLoadTime).to.be.greaterThan(0);
+        // componentLoadTime should be > 0 as it includes contact record loading
+        expect(contactResult.componentLoadTime).to.be.greaterThan(0);
+        expect(contactResult.overallLoadTime).to.be.greaterThan(0);
+
+        console.log(
+          `Salesforce Load Time (login + org access): ${contactResult.salesforceLoadTime}ms`
+        );
+        console.log(
+          `Component Load Time (contact record): ${contactResult.componentLoadTime}ms`
+        );
+        console.log(`Overall Load Time: ${contactResult.overallLoadTime}ms`);
       }
 
-      if (navigationResult) {
-        expect(navigationResult.testSuiteName).to.equal(
-          'Project Record Load Test Suite'
-        );
-        expect(navigationResult.individualTestName).to.equal(
-          'Lightning Navigation Test'
-        );
-        expect(navigationResult.componentLoadTime).to.be.greaterThan(0);
-        expect(navigationResult.salesforceLoadTime).to.equal(0);
-        expect(navigationResult.overallLoadTime).to.be.greaterThan(0);
-      }
-
-      console.log('UI performance test completed successfully');
+      console.log('Contact record UI performance test completed successfully');
     });
   });
 });

@@ -52,37 +52,22 @@ async function simpleTest(
   events: EventEmitter,
   test: ArtilleryTest
 ) {
-  const results: Record<string, any> = {};
   const overallStart = Date.now();
+  let salesforceLoadTime = 0;
+  let componentLoadTime = 0;
 
-  // Login step (Salesforce authentication)
-  await test.step('login_test', async () => {
-    const start = Date.now();
-    await stepErrorCapture('login_test', CURRENT_TEST_FILE_NAME, async () => {
-      console.log('Starting login...');
-      await gotoSF(page, events, async () => await logIn(page));
-      console.log('Login completed');
-    });
-    const salesforceLoadTime = Date.now() - start;
-    results.login_test = {
-      duration: salesforceLoadTime,
-      salesforceLoadTime,
-      componentLoadTime: 0,
-      overallLoadTime: Date.now() - overallStart,
-      testSuiteName: 'Project Record Load Test Suite',
-      individualTestName: 'Salesforce Login Test',
-    };
-  });
-
-  // Navigation step (Component loading)
-  await test.step('simple_navigation', async () => {
+  // Login and org opening (Salesforce authentication + org access)
+  await test.step('login_and_org_access', async () => {
     const start = Date.now();
     await stepErrorCapture(
-      'simple_navigation',
+      'login_and_org_access',
       CURRENT_TEST_FILE_NAME,
       async () => {
-        console.log('Starting navigation...');
+        console.log('Starting login and org access...');
         await gotoSF(page, events, async () => {
+          await logIn(page);
+
+          // Navigate to Lightning home after login
           const { ACCESS_TOKEN } = process.env;
           if (!ACCESS_TOKEN) {
             throw new Error('ACCESS_TOKEN environment variable is required');
@@ -100,38 +85,80 @@ async function simpleTest(
           } catch (error) {
             await page.waitForSelector('div', { timeout: 5000 });
           }
-          console.log('Navigation completed');
         });
+        console.log('Login and org access completed');
       }
     );
-    const componentLoadTime = Date.now() - start;
-    results.simple_navigation = {
-      duration: componentLoadTime,
-      salesforceLoadTime: 0,
-      componentLoadTime,
-      overallLoadTime: Date.now() - overallStart,
-      testSuiteName: 'Project Record Load Test Suite',
-      individualTestName: 'Lightning Navigation Test',
-    };
+    salesforceLoadTime = Date.now() - start;
+  });
+
+  // Contact record loading (Component loading)
+  await test.step('contact_record_load', async () => {
+    const start = Date.now();
+    await stepErrorCapture(
+      'contact_record_load',
+      CURRENT_TEST_FILE_NAME,
+      async () => {
+        console.log('Starting contact record load...');
+
+        // Navigate to Contacts tab
+        await page.goto('/lightning/o/Contact/list?filterName=Recent', {
+          waitUntil: 'load',
+          timeout: 30000,
+        });
+
+        // Wait for the contacts list to load
+        await page.waitForSelector(
+          'table[role="grid"], .slds-table, .listViewTable',
+          { timeout: 15000 }
+        );
+
+        // Find and click the first contact record link - look for "Sam Watts" specifically or first contact
+        let firstContactLink = await page.$('a[title="Sam Watts"]');
+        if (!firstContactLink) {
+          // If Sam Watts not found, look for any contact link in the first row
+          firstContactLink = await page.$(
+            'table[role="grid"] tbody tr:first-child th a, .slds-table tbody tr:first-child th a, .listViewTable tbody tr:first-child th a'
+          );
+        }
+        if (!firstContactLink) {
+          // Try alternative selectors for contact links
+          firstContactLink = await page.$(
+            'table tbody tr:first-child td:first-child a, tbody tr:first-child th scope a'
+          );
+        }
+
+        if (firstContactLink) {
+          await firstContactLink.click();
+          // Wait for the contact record page to load
+          await page.waitForSelector(
+            '.record-header, .slds-page-header, .forceDetailPanelDesktop',
+            { timeout: 15000 }
+          );
+        } else {
+          throw new Error('No contact records found in the list');
+        }
+
+        console.log('Contact record load completed');
+      }
+    );
+    componentLoadTime = Date.now() - start;
   });
 
   const totalOverallLoadTime = Date.now() - overallStart;
 
-  // Write results to JSON file
+  // Write results to JSON file - single record
   const performanceData = {
     aggregate: {
-      summaries: Object.fromEntries(
-        Object.entries(results).map(([stepName, data]) => [
-          `browser.step.${stepName}`,
-          {
-            salesforceLoadTime: data.salesforceLoadTime,
-            componentLoadTime: data.componentLoadTime,
-            overallLoadTime: totalOverallLoadTime,
-            testSuiteName: data.testSuiteName,
-            individualTestName: data.individualTestName,
-          },
-        ])
-      ),
+      summaries: {
+        'browser.step.contact_performance_test': {
+          salesforceLoadTime,
+          componentLoadTime,
+          overallLoadTime: totalOverallLoadTime,
+          testSuiteName: 'Contact Record Load Test Suite',
+          individualTestName: 'Contact Record Performance Test',
+        },
+      },
     },
   };
 
